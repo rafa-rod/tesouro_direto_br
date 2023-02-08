@@ -149,7 +149,7 @@ for tpf in carteira.titulos:
     custos, detalhamento_custos = tesouro_direto.get_custos( mtm_titulo, investimento, data_investimento, vencimento )
 ```
 
-O *scritp* anterior mostra os custos totais se você permanecer até o vencimento, caso deseje simular desfazer hoje do título, altere a data de vencimento:
+O *script* anterior mostra os custos totais se você permanecer até o vencimento, caso deseje simular desfazer hoje do título, altere a data de vencimento:
 
 ```python
 carteira_tesouro_direto = pd.DataFrame()
