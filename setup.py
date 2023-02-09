@@ -3,16 +3,17 @@
 from setuptools import setup
 import subprocess
 import os
+import sys
 
 PACKAGE = "tesouro_direto_br"
 
 with open('README.md', encoding='utf-8') as f:
-	long_description = f.read()
+    long_description = f.read()
 
-out = subprocess.Popen(['python', os.path.join('src', PACKAGE, 'version.py')], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-stdout, _ = out.communicate()
-version = stdout.decode("utf-8").strip()
-print(version)
+sys.path.append(os.path.join('src', PACKAGE))
+import version
+
+version_ = version.__version__
 
 modules = \
 [PACKAGE]
@@ -27,9 +28,9 @@ install_requires = \
 
 setup_kwargs = {
     'name': PACKAGE,
-    'version': version,
+    'version': version_,
     'description': """ Gerenciamento da Carteira de Titulos Publicos Federais com dados do Tesouro Direto """,
-	'long_description_content_type': 'text/markdown',
+    'long_description_content_type': 'text/markdown',
     'long_description': long_description,
     'author': 'Rafael Rodrigues',
     'author_email': 'rafael.rafarod@gmail.com',

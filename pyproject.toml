@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tesouro_direto_br"
-version = "0.0.1"
+version = "0.1.1"
 description = ""
 authors = ["Rafael Rodrigues <rafael.rafarod@gmail.com>"]
 

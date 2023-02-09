@@ -1,1 +1,5 @@
-__version__ = '0.1.0'
+from .tesouro_direto_br import *
+from . import version
+
+__version__ = version.__version__
+__author__ = "Rafael Rodrigues, rafa-rod @ GitHub"
