@@ -34,7 +34,7 @@ alt="Checked with mypy"></a> &nbsp;
 Pode usar o comando:
 
 ```sh
-pip install tesouro_direto_br
+pip install tesouro-direto-br
 ```
 
 Alternativamente, obter diretamente do Github:
