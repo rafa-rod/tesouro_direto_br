@@ -169,7 +169,7 @@ for tpf in carteira.titulos:
   
 ```
 
-O IOF segue uma tabela regressiva de taxa cobrada e é zerada após 30 dias. Já o importo de renda é diminui após dois anos atingindo o mínimo de 15%.
+O IOF segue uma tabela regressiva de taxa cobrada e é zerado após 30 dias. Já o imposto de renda diminui após dois anos onde atinge o valor mínimo de 15%.
 As taxas da B3 são cobradas em Janeiro e Julho de cada ano sobre o valor investido.
 
 Estou considerando 0% a taxa da corretora.
