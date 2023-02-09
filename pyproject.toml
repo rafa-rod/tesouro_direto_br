@@ -1,7 +1,8 @@
 [tool.poetry]
 name = "tesouro_direto_br"
-version = "0.1.1"
-description = ""
+version = "0.2"
+description = "Gerenciamento da Carteira de Titulos Publicos Federais com dados do Tesouro Direto"
+readme = "README.md"
 authors = ["Rafael Rodrigues <rafael.rafarod@gmail.com>"]
 
 [tool.poetry.dependencies]
