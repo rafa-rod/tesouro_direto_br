@@ -21,7 +21,7 @@ alt="Checked with mypy"></a> &nbsp;
 - inserir seus TPFs e montar uma carteira;
 - calcular o valor de mercado dos TPFs (marcação a mercado) e da carteira;
 - calcular retorno da carteira;
-- visualizar, de forma gráfica, a evolução do valor de mercado e do retorno;
+- visualizar a evolução do valor de mercado e do retorno;
 - detalhamento dos custos envolvidos: IOF, IRPF, taxa de custódia B3;
 - obter rentabilidade líquida e bruta da carteira/título;
 - você pode simular uma carteira hipotética de TPFs;
@@ -45,13 +45,14 @@ pip install https://github.com/rafa-rod/tesouro_direto_br/archive/refs/heads/mai
 
 ## Por que é importante?
 
-Notei que algumas corretoras mostraram a rentabilidade da carteira de forma equivocada. Algumas mostram apenas de um título, não da carteira.
+Notei que algumas corretoras mostraram a rentabilidade da carteira de forma equivocada. Algumas mostram apenas de um título, não da carteira e somente de períodos específicos.
 
 ## Examplos
 
 Importe a biblioteca e insira titulos publicos a uma carteira vazia:
 
 ```python
+import getpass
 import tesouro_direto_br as tesouro_direto
 
 #Criar uma carteira vazia:
@@ -68,16 +69,17 @@ carteira.add(titulo2)
 Com a carteira montada, é hora de calcular o valor de mercado da carteira (marcação a mercado):
 
 ```python
-carteira_tesouro_direto = pd.DataFrame()
-for tpf in carteira.titulos:
-	tipo_titulo = tpf["Tipo"]
-	quantidade = tpf["Quantidade"]
-	data_investimento = tpf["Data Investimento"]
-	vencimento = tpf["Vencimento"]
+USER = getpass.getuser().lower()
+PASS = getpass.getpass("Senha de rede: ")
+SERVIDOR = "SERVIDOR"
+PORTA = "PORTA"
 
-	mtm_completo_titulo, mtm_titulo = tesouro_direto.calcula_mtm_titulo(tipo_titulo, quantidade, data_investimento, vencimento)
+proxies = {
+          "http":f"http://{USER}:{PASS}@{SERVIDOR}:{PORTA}",
+          "https":f"http://{USER}:{PASS}@{SERVIDOR}:{PORTA}",
+}
 
-	carteira_tesouro_direto = pd.concat([carteira_tesouro_direto, mtm_titulo], axis=1)
+carteira_tesouro_direto = tesouro_direto.calcula_retorno_carteira(carteira, proxies=proxies)
 ```
 
 Com os valores de mercado, é possível obter a rentabilidade da carteira:
@@ -94,21 +96,8 @@ print(f"Retorno da Carteira é de {round(retorno_periodo,2)}% desde {dia}/{mes}/
 Se desejar obter a rentabilidade por período específico (como as corretoras fazem):
 
 ```python
-import numpy as np
-
-rentabilidades = pd.DataFrame(data= np.array([[retorno_periodo,
-                    tesouro_direto.calcula_retorno_carteira(carteira_tesouro_direto, periodo=21),
-                    tesouro_direto.calcula_retorno_carteira(carteira_tesouro_direto, periodo=126),
-                    tesouro_direto.calcula_retorno_carteira(carteira_tesouro_direto, periodo=252),
-                    tesouro_direto.calcula_retorno_carteira(carteira_tesouro_direto, periodo=504)]]),
-            index=["23/01/2023"], 
-            columns=[f"Rentabilidade desde {dia}/{mes}/{ano}",
-                                            "Rentabilidade 21m",
-                                            "Rentabilidade 126m",
-                                            "Rentabilidade 252du",
-                                            "Rentabilidade 504du"])
-
-print(rentabilidades.T)
+rentalibidade_periodo = 100*carteira_tesouro_direto['Rentabilidade Acumulada'].iloc[-1]
+print(f"Rentabilidade do período é de {round(rentalibidade_periodo, 3)}%")
 ```
 
 A análise melhora se você comparar com um *benchmark* como o CDI:
@@ -117,59 +106,79 @@ A análise melhora se você comparar com um *benchmark* como o CDI:
 import matplotlib.pyplot as plt
 import comparar_fundos_br as comp
 
-cdi, cdi_acumulado = comp.get_benchmark(str(retorno_carteira.index[0]).split(" ")[0], 
-                                        str(retorno_carteira.index[-1]).split(" ")[0], 
-                                        benchmark = "cdi")
+cdi, cdi_acumulado = comp.get_benchmark(str(carteira_tesouro_direto.index[0]).split(" ")[0], 
+                                        str(carteira_tesouro_direto.index[-1]).split(" ")[0], 
+                                        benchmark = "cdi", proxy=proxies)
 retorno_cdi = (cdi_acumulado-1)*100
 
 plt.figure(figsize=(17,5))
 plt.title("Rentabilidade da Carteira")
-plt.plot(retorno_carteira*100)
+plt.plot(carteira_tesouro_direto[["Rentabilidade Acumulada"]]*100)
 plt.plot(retorno_cdi, color="red", linestyle="--", lw=1)
 plt.legend(["Carteira", "CDI"], frameon=False, loc="center right")
+plt.ylabel('%',rotation=0,labelpad=-10,loc="top")
+plt.grid(axis="x")
 plt.show()
 ```
 
-Se precisar plotar cada TPF de forma individual e ver os custos de cada um:
+<center>
+<img src="https://github.com/rafa-rod/pyettj/blob/main/media/cdi.png" style="width:60%;"/>
+</center>
+
+Os custos de cada TPF podem ser obtidos seguindo o *script* a seguir. Esses serão os custos aproximados caso o TPF seja resgatado na presente data.
 
 ```python
-carteira_tesouro_direto = pd.DataFrame()
+nom = tesouro_direto.nomeclatura_titulos()
 for tpf in carteira.titulos:
     tipo_titulo = tpf["Tipo"]
-    quantidade = tpf["Quantidade"]
+    investimento = tpf["Quantidade"]
     data_investimento = tpf["Data Investimento"]
     vencimento = tpf["Vencimento"]
-
-    mtm_completo_titulo, mtm_titulo = tesouro_direto.calcula_mtm_titulo(tipo_titulo, quantidade, data_investimento, vencimento)
-
-    tesouro_direto.plot_mtm(mtm_completo_titulo, data_investimento, investimento)
-
-    tesouro_direto.plot_taxas(tipo_titulo, data_investimento, vencimento)
-
-    custos, detalhamento_custos = tesouro_direto.get_custos( mtm_titulo, investimento, data_investimento, vencimento )
-```
-
-O *script* anterior mostra os custos totais se você permanecer até o vencimento, caso deseje simular desfazer hoje do título, altere a data de vencimento:
-
-```python
-carteira_tesouro_direto = pd.DataFrame()
-for tpf in carteira.titulos:
-    tipo_titulo = tpf["Tipo"]
-    quantidade = tpf["Quantidade"]
-    data_investimento = tpf["Data Investimento"]
-    vencimento = tpf["Vencimento"]
-
-    mtm_completo_titulo, mtm_titulo = tesouro_direto.calcula_mtm_titulo(tipo_titulo, quantidade, data_investimento, vencimento)
-
-    tesouro_direto.plot_mtm(mtm_completo_titulo, data_investimento, investimento)
-
-    tesouro_direto.plot_taxas(tipo_titulo, data_investimento, vencimento)
-
-    custos, detalhamento_custos = tesouro_direto.get_custos( mtm_titulo, investimento, data_investimento, "2023-02-08" )
-  
+    venc = vencimento.split("-")[0]
+    nome_titulo = [nom[tipo_titulo].upper() + "_" + venc + "_" + data_investimento]
+    print(nome_titulo[0])
+    mtm_titulo = carteira_tesouro_direto[nome_titulo].dropna()
+    custos, detalhamento_custos = get_custos( mtm_titulo, custo_b3=True)
+    print()
 ```
 
 O IOF segue uma tabela regressiva de taxa cobrada e é zerado após 30 dias. Já o imposto de renda diminui após dois anos onde atinge o valor mínimo de 15%.
-As taxas da B3 são cobradas em Janeiro e Julho de cada ano sobre o valor investido.
+As taxas da B3 são cobradas em Janeiro e Julho de cada ano sobre o valor investido e proporcionais ao tempo investido. Tesouro Selic tem isenção para investimentos abaixo de R$ 10.000,00. Maiores detalhes consultar site da B3.
 
-Estou considerando 0% a taxa da corretora.
+Estou considerando 0% a taxa da corretora uma vez que a maior parte das corretoras não tem cobrado esse valor.
+
+É possível obter as movimentações de vendas ou resgates (recompras) de TPFs:
+
+```python
+movimentacao_tpf = movimentacoes_titulos_publicos("venda", proxies=proxies)
+
+#Maiores Movimentações nos últimos 10 dias:
+maiores_movimentacoes = movimentacao_pivot.iloc[-10:].T.dropna()
+maiores_movimentacoes["Soma"] = maiores_movimentacoes.sum(axis=1)
+maiores_movimentacoes = maiores_movimentacoes.sort_values("Soma", ascending=False)
+print(maiores_movimentacoes)
+
+#destaque para os 3 maiores movimentos de venda
+tres_maiores = maiores_movimentacoes.index[:3].tolist()
+maiores = maiores_movimentacoes.drop(["Soma"], axis=1).T
+
+fig = plt.gcf()
+fig.set_size_inches(15, 7, forward = False)
+plt.rcParams.update({'font.size': 22})
+
+for tit in maiores.drop(tres_maiores, axis=1).columns:
+    plt.plot(maiores[tit], color="gray", alpha=0.35, label='')
+for tit in maiores[tres_maiores].columns:
+    plt.plot(maiores[tit], lw=3, label=tit)
+plt.legend(frameon=False, bbox_to_anchor=(0.95, 1.))
+plt.suptitle("Movimentações de Venda de Títulos Públicos")
+plt.box(False)
+plt.grid(axis="y")
+plt.ylabel('Quantidade',rotation=0,labelpad=-30,loc="top")
+plt.xticks(rotation=15)
+plt.show()
+```
+
+<center>
+<img src="https://github.com/rafa-rod/pyettj/blob/main/media/movimentacao_tpf.png" style="width:60%;"/>
+</center>
