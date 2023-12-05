@@ -122,7 +122,7 @@ plt.show()
 ```
 
 <center>
-<img src="https://github.com/rafa-rod/tesouro_direto_br/blob/main/media/cdi.png" style="width:60%;"/>
+<img src="https://github.com/rafa-rod/tesouro_direto_br/blob/main/media/cdi.png" style="width:100%;"/>
 </center>
 
 Os custos de cada TPF podem ser obtidos seguindo o *script* a seguir. Esses serão os custos aproximados caso o TPF seja resgatado na presente data.
@@ -180,5 +180,5 @@ plt.show()
 ```
 
 <center>
-<img src="https://github.com/rafa-rod/tesouro_direto_br/blob/main/media/movimentacao_tpf.png" style="width:60%;"/>
+<img src="https://github.com/rafa-rod/tesouro_direto_br/blob/main/media/movimentacao_tpf.png" style="width:100%;"/>
 </center>
