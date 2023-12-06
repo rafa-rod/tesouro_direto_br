@@ -11,15 +11,7 @@ import tesouro_direto_br as tesouro_direto
 
 class TestClass():
 
-    USER = getpass.getuser().lower()
-    PASS = 1537Rafa!
-    SERVIDOR = "proxy.inf.bndes.net"
-    PORTA = 8080
-
-    proxies = {
-            "http":f"http://{USER}:{PASS}@{SERVIDOR}:{PORTA}",
-            "https":f"http://{USER}:{PASS}@{SERVIDOR}:{PORTA}",
-    }
+    proxies = None
     taxa_agrupada = tesouro_direto.busca_tesouro_direto(tipo="taxa", proxies=proxies, agrupar=True)
     assert not taxa_agrupada.empty
 
