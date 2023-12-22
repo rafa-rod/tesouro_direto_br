@@ -45,7 +45,7 @@ pip install https://github.com/rafa-rod/tesouro_direto_br/archive/refs/heads/mai
 
 ## Por que é importante?
 
-Notei que algumas corretoras mostraram a rentabilidade da carteira de forma equivocada. Algumas mostram apenas de um título, não da carteira e somente de períodos específicos.
+Notei que algumas corretoras mostraram a rentabilidade da carteira de forma equivocada. Algumas mostram apenas de um título, não da carteira e somente de períodos específicos. Além disso, você pode simular investimentos em períodos históricos específicos e estudar suas opções de investimento antes de adquirir algum título específico.
 
 ## Examplos
 
@@ -182,3 +182,33 @@ plt.show()
 <center>
 <img src="https://github.com/rafa-rod/tesouro_direto_br/blob/main/media/movimentacao_tpf.png" style="width:100%;"/>
 </center>
+
+Você pode estudar o comportamento de uma estratégia ou dos títulos em períodos históricos específicos. Para isso, basta informar a opção *taxa* à função *busca_tesouro_direto*, veja um exemplo de títulos ofertados em 17/02/2016:
+
+```python
+titulos_ofertados = tesouro_direto.busca_tesouro_direto(tipo="taxa", proxies=proxies).reset_index()
+
+excluir = ["Juros Semestrais", "Renda+", "Educa+"]
+titulos_ofertados_filtrado = titulos_ofertados[(titulos_ofertados["Data Base"]>="2016-02-17") &
+                                   (titulos_ofertados["Data Base"]<"2017-01-01") &
+                                  (~titulos_ofertados["Tipo Titulo"].str.contains(excluir[0])) &
+                                  (~titulos_ofertados["Tipo Titulo"].str.contains(excluir[1])) &
+                                  (~titulos_ofertados["Tipo Titulo"].str.contains(excluir[2]))].set_index(["Tipo Titulo",
+                                                                                    "Data Vencimento"])
+titulos_ofertados_filtrado.tail()
+```
+
+No exemplo acima, optei por excluir TPFs com Juros Semestrais e os novos Renda+ e Educa+ (sequer eram ofertados no período pesquisado). Filtrando por tipo de indexador para facilitar a identificação:
+
+```python
+inflacao = titulos_ofertados_filtrado.loc[["Tesouro IPCA+"], :].sort_values("Data Base", ascending=False)
+display(inflacao[inflacao["Data Base"]=="2016-02-17"].sort_index(level=1, ascending=True))
+
+prefixado = titulos_ofertados_filtrado.loc[["Tesouro Prefixado"], :].sort_values("Data Base", ascending=False)
+display(prefixado[prefixado["Data Base"]=="2016-02-17"].sort_index(level=1, ascending=True))
+
+selic = titulos_ofertados_filtrado.loc[["Tesouro Selic"], :].sort_values("Data Base", ascending=False)
+display(selic[selic["Data Base"]=="2016-02-17"].sort_index(level=1, ascending=True))
+```
+
+A partir de um título específico que tenha identificado, pode-se repetir os procedimentos de elaboração de carteira exibido no início deste tutorial e calcular a rentabilidade dos títulos até o vencimento comparando com banchmark. Assim, você consegueria saber se a estratégia foi a que esperava (não necessariamente pode se repetir no futuro).
