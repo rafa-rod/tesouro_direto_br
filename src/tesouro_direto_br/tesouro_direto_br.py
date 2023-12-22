@@ -239,6 +239,10 @@ def get_custos(
     print(f"MTM Liquido {mtm_atual+retorno_liquido}")
     return custos, detalhamento_custos
 
+def _get_vencimentos(df: pd.DataFrame(), col: str) -> Union[datetime, None]:
+    try:
+        return df[df[col].isnull()][col].index[0]
+    except: pass
 
 def _get_valid_date(
     date: Union[str, datetime], carteira_tesouro_direto: pd.DataFrame()
@@ -377,7 +381,7 @@ def calcula_retorno_carteira(
             [carteira_tesouro_direto, serie_retorno], axis=1
         )
     columns = carteira_tesouro_direto.columns.tolist()
-    vencimentos_validos = [carteira_tesouro_direto[col].dropna().index[-1]+timedelta(1) for col in columns][:-1]
+    vencimentos_validos = [_get_vencimentos(carteira_tesouro_direto, col) for col in columns if _get_vencimentos(carteira_tesouro_direto, col) is not None]
     carteira_tesouro_direto["MTM"] = carteira_tesouro_direto.sum(axis=1)
     carteira_tesouro_direto["Qde Cotas"] = carteira_tesouro_direto["MTM"].iloc[0]
     carteira_tesouro_direto["Cotas"] = 1
@@ -434,7 +438,8 @@ def calcula_retorno_carteira(
                 if pd.to_datetime(carteira.titulos[x]["Vencimento"])
                 == dt_vencimento[0]
             ]
-            desinvestimento = carteira_tesouro_direto.loc[vencimentos_validos[idx_vencimento]-timedelta(1), ativo].values[0]
+            dt_vencimento_dia_anterior = carteira_tesouro_direto[ativo].dropna().index[-1]
+            desinvestimento = carteira_tesouro_direto.loc[dt_vencimento_dia_anterior, ativo].values[0]
             carteira_tesouro_direto.loc[vencimentos_validos[idx_vencimento], "Qde Cotas"] = (
                 carteira_tesouro_direto.iloc[x-1]["Qde Cotas"]
                 - desinvestimento / carteira_tesouro_direto.iloc[x-1]["Cotas"]
