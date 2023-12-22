@@ -183,7 +183,7 @@ plt.show()
 <img src="https://github.com/rafa-rod/tesouro_direto_br/blob/main/media/movimentacao_tpf.png" style="width:100%;"/>
 </center>
 
-Você pode estudar o comportamento de uma estratégia ou dos títulos em períodos históricos específicos. Para isso, basta informar a opção *taxa* à função *busca_tesouro_direto*, veja um exemplo de títulos ofertados em 17/02/2016:
+Você pode estudar o comportamento de uma estratégia ou dos títulos em períodos históricos específicos. Para isso, basta informar a opção *taxa* à função *busca_tesouro_direto*, veja um exemplo de títulos ofertados entre 17/02/2016 e 01/01/2017:
 
 ```python
 titulos_ofertados = tesouro_direto.busca_tesouro_direto(tipo="taxa", proxies=proxies).reset_index()
@@ -191,9 +191,7 @@ titulos_ofertados = tesouro_direto.busca_tesouro_direto(tipo="taxa", proxies=pro
 excluir = ["Juros Semestrais", "Renda+", "Educa+"]
 titulos_ofertados_filtrado = titulos_ofertados[(titulos_ofertados["Data Base"]>="2016-02-17") &
                                    (titulos_ofertados["Data Base"]<"2017-01-01") &
-                                  (~titulos_ofertados["Tipo Titulo"].str.contains(excluir[0])) &
-                                  (~titulos_ofertados["Tipo Titulo"].str.contains(excluir[1])) &
-                                  (~titulos_ofertados["Tipo Titulo"].str.contains(excluir[2]))].set_index(["Tipo Titulo",
+                                   (~titulos_ofertados["Tipo Titulo"].str.contains("&".join(excluir)))].set_index(["Tipo Titulo",
                                                                                     "Data Vencimento"])
 titulos_ofertados_filtrado.tail()
 ```
