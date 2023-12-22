@@ -1,16 +1,16 @@
 [tool.poetry]
 name = "tesouro_direto_br"
-version = "0.3"
+version = "0.3.1"
 description = "Gerenciamento da Carteira de Titulos Publicos Federais com dados do Tesouro Direto"
 readme = "README.md"
 authors = ["Rafael Rodrigues <rafael.rafarod@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pandas = "^1.5.3"
 requests = "^2.28.2"
-pyettj = "^0.2.4"
-matplotlib = "^3.6.3"
+pyettj = "^0.3.0"
+matplotlib = ">=3.6.3"
+pandas = ">=1.5.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
