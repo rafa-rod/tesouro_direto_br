@@ -377,6 +377,7 @@ def calcula_retorno_carteira(
             [carteira_tesouro_direto, serie_retorno], axis=1
         )
     columns = carteira_tesouro_direto.columns.tolist()
+    vencimentos_validos = [carteira_tesouro_direto[col].dropna().index[-1]+timedelta(1) for col in columns][:-1]
     carteira_tesouro_direto["MTM"] = carteira_tesouro_direto.sum(axis=1)
     carteira_tesouro_direto["Qde Cotas"] = carteira_tesouro_direto["MTM"].iloc[0]
     carteira_tesouro_direto["Cotas"] = 1
@@ -384,12 +385,21 @@ def calcula_retorno_carteira(
         pd.to_datetime(carteira.titulos[x]["Data Investimento"])
         for x in range(len(carteira.titulos))
     ]
+    vencimentos = [
+        pd.to_datetime(carteira.titulos[x]["Vencimento"])
+        for x in range(len(carteira.titulos))
+    ]
+
     investimentos_datas_validas = [
         _get_valid_date(x, carteira_tesouro_direto) for x in investimentos
     ]
+
     for x, idx in enumerate(carteira_tesouro_direto.index[1:], start=1):
         idx_investimento = [
             i for i, date in enumerate(investimentos_datas_validas) if idx == date
+        ]
+        idx_vencimento = [
+            i for i, date in enumerate(vencimentos_validos) if idx == date
         ]
         if idx_investimento:
             idx_investimento = idx_investimento[0]
@@ -411,10 +421,26 @@ def calcula_retorno_carteira(
                 carteira_tesouro_direto.iloc[x - 1]["Qde Cotas"]
                 + investimento / carteira_tesouro_direto.iloc[x - 1]["Cotas"]
             )
+        elif idx_vencimento:
+            idx_vencimento = idx_vencimento[0]
+            dt_vencimento = [vencimentos[idx_vencimento]]
+            ativo = [
+                carteira.titulos[x]["Nomeclatura"]
+                + "_"
+                + carteira.titulos[x]["Vencimento"][:4]
+                + "_"
+                + carteira.titulos[x]["Data Investimento"]
+                for x in range(len(carteira.titulos))
+                if pd.to_datetime(carteira.titulos[x]["Vencimento"])
+                == dt_vencimento[0]
+            ]
+            desinvestimento = carteira_tesouro_direto.loc[vencimentos_validos[idx_vencimento]-timedelta(1), ativo].values[0]
+            carteira_tesouro_direto.loc[vencimentos_validos[idx_vencimento], "Qde Cotas"] = (
+                carteira_tesouro_direto.iloc[x-1]["Qde Cotas"]
+                - desinvestimento / carteira_tesouro_direto.iloc[x-1]["Cotas"]
+            )
         else:
-            carteira_tesouro_direto.loc[
-                idx, "Qde Cotas"
-            ] = carteira_tesouro_direto.iloc[x - 1]["Qde Cotas"]
+            carteira_tesouro_direto.loc[idx, "Qde Cotas"] = carteira_tesouro_direto.iloc[x - 1]["Qde Cotas"]
         carteira_tesouro_direto.loc[idx, "Cotas"] = (
             carteira_tesouro_direto.loc[idx, columns].dropna().sum()
             / carteira_tesouro_direto.loc[idx, "Qde Cotas"]
