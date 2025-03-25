@@ -28,9 +28,9 @@ def nomeclatura_titulos() -> Dict[str, str]:
         "Tesouro Prefixado": "LTN",
         "Tesouro Prefixado com Juros Semestrais": "NTN-F",
         "Tesouro Selic": "LTF",
-        "Tesouro IPCA+": "NTN-B Principal",
-        "Tesouro RendA+": "RendA+",
-        "Tesouro Educa+": "Educa+",
+        "Tesouro IPCA+": "NTN-B PRINCIPAL",
+        "Tesouro RendA+": "RENDA+",
+        "Tesouro Educa+": "EDUCA+",
     }
     return nomeclatura_dict
 
