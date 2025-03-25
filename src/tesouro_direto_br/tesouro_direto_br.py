@@ -48,7 +48,7 @@ class Titulo:
         self.data_vencimento = data_vencimento
         self.investimento = investimento
         if self.tipo_titulo:
-            self.nomeclatura = nomeclatura_titulos()[self.tipo_titulo]
+            self.nomeclatura = nomeclatura_titulos()[self.tipo_titulo].upper()
         else:
             self.nomeclatura = None
         self.titulo = {
