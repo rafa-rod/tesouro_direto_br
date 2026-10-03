@@ -151,9 +151,14 @@ def test_fluxo_completo_com_dados_reais():
     ultima_data = taxa_agrupada["Data Base"].max()
     assert ultima_data >= pd.Timestamp.today() - pd.Timedelta(days=15)  # base atualizada
 
+    # data de investimento: primeiro dia em que os dois títulos têm preço
+    titulos = [("Tesouro IPCA+", "2035-05-15", 33.65), ("Tesouro Selic", "2029-03-01", 50)]
+    inicio = max(taxa_agrupada.loc[(tipo, venc), "Data Base"].min() for tipo, venc, _ in titulos)
+    data_investimento = (inicio + pd.Timedelta(days=30)).strftime("%Y-%m-%d")
+
     carteira = Carteira(Titulo())
-    carteira.add(Titulo("Tesouro IPCA+", "2035-05-15", "2023-01-02", 33.65))
-    carteira.add(Titulo("Tesouro Selic", "2029-03-01", "2023-01-02", 50))
+    for tipo, venc, valor in titulos:
+        carteira.add(Titulo(tipo, venc, data_investimento, valor))
     carteira_tesouro_direto = calcula_retorno_carteira(carteira)
     assert not carteira_tesouro_direto.empty
     assert carteira_tesouro_direto.index[-1] == ultima_data
