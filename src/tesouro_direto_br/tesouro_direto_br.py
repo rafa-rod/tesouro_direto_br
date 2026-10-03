@@ -384,7 +384,7 @@ def calcula_retorno_carteira(
     vencimentos_validos = [_get_vencimentos(carteira_tesouro_direto, col) for col in columns if _get_vencimentos(carteira_tesouro_direto, col) is not None]
     carteira_tesouro_direto["MTM"] = carteira_tesouro_direto.sum(axis=1)
     carteira_tesouro_direto["Qde Cotas"] = carteira_tesouro_direto["MTM"].iloc[0]
-    carteira_tesouro_direto["Cotas"] = 1
+    carteira_tesouro_direto["Cotas"] = 1.0
     investimentos = [
         pd.to_datetime(carteira.titulos[x]["Data Investimento"])
         for x in range(len(carteira.titulos))
