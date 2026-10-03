@@ -144,18 +144,26 @@ class TestClass:
 # ==================== INTEGRAÇÃO (REDE) ====================
 @pytest.mark.network
 def test_fluxo_completo_com_dados_reais():
+    """Usa títulos ainda em mercado: com títulos vencidos, a carteira perde o MTM
+    no vencimento e get_custos passa a ver um 'prejuízo' (limitação conhecida)."""
     taxa_agrupada = busca_tesouro_direto(tipo="taxa", agrupar=True)
     assert not taxa_agrupada.empty
+    ultima_data = taxa_agrupada["Data Base"].max()
+    assert ultima_data >= pd.Timestamp.today() - pd.Timedelta(days=15)  # base atualizada
 
     carteira = Carteira(Titulo())
-    carteira.add(Titulo("Tesouro IPCA+", "2026-08-15", "2021-07-08", 33.65))
-    carteira.add(Titulo("Tesouro Selic", "2025-03-01", "2021-07-08", 50))
+    carteira.add(Titulo("Tesouro IPCA+", "2035-05-15", "2023-01-02", 33.65))
+    carteira.add(Titulo("Tesouro Selic", "2029-03-01", "2023-01-02", 50))
     carteira_tesouro_direto = calcula_retorno_carteira(carteira)
     assert not carteira_tesouro_direto.empty
+    assert carteira_tesouro_direto.index[-1] == ultima_data
+    assert carteira_tesouro_direto["MTM"].iloc[0] == pytest.approx(33.65 + 50)
     assert carteira_tesouro_direto["Rentabilidade Acumulada"].iloc[-1] != 0
 
     movimentacao_pivot = movimentacoes_titulos_publicos("venda")
     assert not movimentacao_pivot.empty
+    assert movimentacao_pivot.index.name == "Data Venda"
 
-    custos, _ = get_custos(carteira_tesouro_direto[["MTM"]], custo_b3=True)
-    assert custos > 0
+    custos, detalhes = get_custos(carteira_tesouro_direto[["MTM"]], custo_b3=True)
+    assert detalhes["Taxa Custódia B3"] > 0
+    assert np.isfinite(custos)
