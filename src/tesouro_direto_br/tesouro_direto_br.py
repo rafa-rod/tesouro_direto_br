@@ -96,6 +96,7 @@ def busca_tesouro_direto(
 
     data_str = io.StringIO(data)
     df = pd.read_csv(data_str, sep=";", decimal=",")
+    df.columns = df.columns.str.strip()
 
     coluna_datas = [
         x for x in df.columns if x.startswith("Data") or x.startswith("Vencimento")
@@ -106,7 +107,7 @@ def busca_tesouro_direto(
 
     if agrupar:  # titulo e seu vencimento
         multi_indice = pd.MultiIndex.from_frame(df.iloc[:, :2])
-        df = df.set_index(multi_indice).iloc[:, 2:]
+        df = df.set_index(multi_indice).iloc[:, 2:].sort_index()
     return df
 
 
@@ -283,6 +284,16 @@ def movimentacoes_titulos_publicos(
     taxa_agrupada = busca_tesouro_direto(
         tipo=tipo_movimentacao, proxies=proxies, agrupar=True
     )
+    # o nome da coluna de data muda nos arquivos do Tesouro (ex.: "Data Venda" virou
+    # "Data de Liquidacao da Venda"); usa a primeira coluna de data e mantém o nome antigo
+    coluna_data = f"Data {tipo_movimentacao.title()}"
+    colunas_data = [c for c in taxa_agrupada.columns if c.startswith("Data")]
+    if not colunas_data:
+        raise ValueError(
+            f"Coluna de data não encontrada no arquivo de {tipo_movimentacao}: "
+            f"{taxa_agrupada.columns.tolist()}"
+        )
+    taxa_agrupada = taxa_agrupada.rename(columns={colunas_data[0]: coluna_data})
     movimentacao = (
         taxa_agrupada.reset_index()
         .groupby(

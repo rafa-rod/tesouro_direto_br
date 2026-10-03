@@ -25,7 +25,7 @@ Tesouro IPCA+;15/08/2026;09/07/2021;3,91;4,03;2902,00;2892,00;2892,00
 Tesouro IPCA+;15/08/2026;12/07/2021;3,92;4,04;2904,00;2894,00;2894,00
 """
 
-VENDA_CSV = """Tipo Titulo;Vencimento do Titulo;Data Venda;PU;Quantidade;Valor
+VENDA_CSV = """Tipo Titulo;Vencimento do Titulo;Data de Liquidacao da Venda;PU;Quantidade;Valor
 Tesouro Selic;01/03/2025;08/07/2021;10790,00;10,5;113295,00
 Tesouro Selic;01/03/2025;09/07/2021;10800,00;2,0;21600,00
 Tesouro IPCA+;15/08/2026;08/07/2021;2890,00;3,0;8670,00
@@ -92,6 +92,7 @@ class TestClass:
 
         agrupado = busca_tesouro_direto(tipo="TAXA", agrupar=True)
         assert agrupado.index.names == ["Tipo Titulo", "Data Vencimento"]
+        assert agrupado.index.is_monotonic_increasing  # evita PerformanceWarning no .loc
 
     def test_busca_tipo_invalido(self):
         with pytest.raises(ValueError):
@@ -99,7 +100,15 @@ class TestClass:
         with pytest.raises(ValueError):
             movimentacoes_titulos_publicos("outro")
 
-    def test_movimentacoes(self, fake_tesouro):
+    @pytest.mark.parametrize(
+        "coluna", ["Data de Liquidacao da Venda", "Data Venda", " Data Venda "]
+    )
+    def test_movimentacoes(self, fake_tesouro, monkeypatch, coluna):
+        """O nome da coluna de data mudou no arquivo do Tesouro; aceita o atual e o antigo."""
+        csv = VENDA_CSV.replace("Data de Liquidacao da Venda", coluna)
+        monkeypatch.setattr(
+            td.tesouro_direto_br.requests, "get", lambda url, *a, **k: _FakeResponse(csv)
+        )
         pivot = movimentacoes_titulos_publicos("venda")
         assert pivot.index.name == "Data Venda"
         assert set(pivot.columns) == {"Tesouro Selic_2025-03-01", "Tesouro IPCA+_2026-08-15"}
